@@ -1,0 +1,705 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Verify the Edge – Trade Judge &amp; Note</title>
+  <!-- Main stylesheet -->
+  <link rel="stylesheet" href="style.css">
+  <!-- Chart.js for graphs -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.0/dist/chart.umd.min.js"></script>
+</head>
+<body>
+  <!-- Toast (popup) -->
+  <div id="toast" class="toast" role="status" aria-live="polite" aria-atomic="true" hidden></div>
+
+  <div class="app">
+        <div class="topbar">
+<header class="app-header">
+        <!-- Title is split over two lines intentionally to avoid awkward wrapping on small screens -->
+        <h1 class="title-line1">Verify the Edge</h1>
+        <h2 class="title-line2">Trade Judge &amp; Note</h2>
+    </header>
+    <nav class="tabs">
+      <button class="tab-button active" data-tab="entry">📥 entry</button>
+      <button class="tab-button" data-tab="exit">✅ exit</button>
+      <button class="tab-button" data-tab="stats">📊 Stats</button>
+    </nav>
+    </div>
+    <main class="app-main">
+
+    <!-- Entry Tab Content -->
+    <section id="entry-tab" class="tab-content active">
+<div class="section-header">
+  <h2>エントリー入力</h2>
+  <span id="entry-edit-badge" class="edit-badge" hidden>編集中</span>
+</div>
+
+  <div class="form-card">
+    <div id="entry-error" class="error" role="alert" aria-live="polite"></div>
+
+    <form id="entry-form" novalidate>
+      <div class="form-columns">
+        <!-- Column 1: 基本情報 -->
+        <div class="form-column">
+          <h3>基本情報</h3>
+
+          <label>エントリー日時 <span class="req">必須</span>
+            <input id="entry-datetime" type="datetime-local" required>
+          </label>
+
+          <label>エントリー曜日 <span class="muted">（自動）</span>
+            <input id="entry-weekday" type="text" placeholder="（日時から自動入力）" readonly>
+          </label>
+
+          <label>エントリー時立ち合い <span class="req">必須</span>
+            <select id="entry-session" required>
+              <option value="" selected>（未選択）</option>
+              <option value="Day">Day</option>
+              <option value="Night">Night</option>
+            </select>
+          </label>
+
+          <label>銘柄
+            <select id="entry-symbol">
+              <option value="nk225mc" selected>nk225mc</option>
+              <option value="nk225m">nk225m</option>
+              <option value="nk225">nk225</option>
+            </select>
+          </label>
+
+          <label>時間足
+            <select id="entry-timeframe">
+              <option value="1m">1分</option>
+              <option value="5m">5分</option>
+              <option value="15m">15分</option>
+              <option value="30m">30分</option>
+              <option value="1h" selected>1時間</option>
+              <option value="4h">4時間</option>
+              <option value="1d">日足</option>
+            </select>
+          </label>
+
+          <label>取引区分
+            <select id="entry-tradeType">
+              <option value="real" selected>リアル</option>
+              <option value="virtual">バーチャル</option>
+              <option value="practice">プラクティス</option>
+            </select>
+          </label>
+
+          <label>エントリー方向
+            <select id="entry-direction">
+              <option value="long" selected>ロング</option>
+              <option value="short">ショート</option>
+              <option value="flat">ノーポジ</option>
+            </select>
+          </label>
+
+          <label>エントリー価格 <span class="req">必須</span>
+            <input id="entry-price" type="number" inputmode="decimal" step="0.1" required>
+          </label>
+
+          <label>枚数 <span class="req">必須</span>
+            <input id="entry-size" type="number" inputmode="decimal" step="1" min="1" required>
+          </label>
+
+          <label>1枚あたりの手数料 <span class="req">必須</span>
+            <input id="entry-fee" type="number" inputmode="decimal" step="0.1" min="0" required>
+          </label>
+
+          <label>TP（Take Profit）
+            <input id="entry-LimitPrice" type="number" inputmode="decimal" step="0.1">
+          </label>
+
+          <label>LS（Stop Loss）
+            <input id="entry-LossPrice" type="number" inputmode="decimal" step="0.1">
+          </label>
+
+          <label>TP種別 <span class="req">必須</span>
+            <select id="entry-tpType" required>
+              <option value="" selected>（未選択）</option>
+              <option value="TP_HBOP">HBOP</option>
+              <option value="TP_R2">R2</option>
+              <option value="TP_R1">R1</option>
+              <option value="TP_pivot">pivot</option>
+              <option value="TP_S1">S1</option>
+              <option value="TP_S2">S2</option>
+              <option value="TP_LBOP">LBOP</option>
+              <option value="TP_RecentHigh">直近高値</option>
+              <option value="TP_RecentLow">直近安値</option>
+              <option value="TP_0.5ATR">0.5ATR</option>
+              <option value="TP_0.25ATR">0.25ATR</option>
+              <option value="TP_EMA200">EMA200</option>
+              <option value="TP_NoSetting">設定なし</option>
+              <option value="TP_Others">その他</option>
+            </select>
+          </label>
+          <label id="entry-tpType-other-wrap" class="subfield" hidden>TP種別（その他）
+            <input id="entry-tpTypeOther" type="text" placeholder="例：VWAP, 前日高値 など">
+          </label>
+
+          <label>LS種別 <span class="req">必須</span>
+            <select id="entry-lsType" required>
+              <option value="" selected>（未選択）</option>
+              <option value="LS_HBOP">HBOP</option>
+              <option value="LS_R2">R2</option>
+              <option value="LS_R1">R1</option>
+              <option value="LS_pivot">pivot</option>
+              <option value="LS_S1">S1</option>
+              <option value="LS_S2">S2</option>
+              <option value="LS_LBOP">LBOP</option>
+              <option value="LS_RecentHigh">直近高値</option>
+              <option value="LS_RecentLow">直近安値</option>
+              <option value="LS_0.5ATR">0.5ATR</option>
+              <option value="LS_0.25ATR">0.25ATR</option>
+              <option value="LS_EMA200">EMA200</option>
+              <option value="LS_NoSetting">設定なし</option>
+              <option value="LS_Others">その他</option>
+            </select>
+          </label>
+          <label id="entry-lsType-other-wrap" class="subfield" hidden>LS種別（その他）
+            <input id="entry-lsTypeOther" type="text" placeholder="例：VWAP, 前日安値 など">
+          </label>
+
+          <label>RR（Risk-Reward）
+            <input id="entry-rr" type="number" inputmode="decimal" step="0.01" readonly>
+          </label>
+        </div>
+
+        <!-- Column 2: インジケーター -->
+        <div class="form-column">
+          <h3>インジケーター</h3>
+          
+          <label>波動ライン
+            <select id="ind-waveCount">
+              <option value="" selected>（未選択）</option>
+              <option value="Wave1">第1波</option>
+              <option value="Wave2">第2波</option>
+              <option value="Wave3">第3波</option>
+              <option value="Wave4">第4波</option>
+              <option value="Wave5">第5波</option>
+              <option value="Wave6">第6波</option>
+              <option value="Wave7">第7波～</option>
+              <option value="unknown">非成立</option>
+            </select>
+          </label>
+          
+          <label>ダウ形状
+            <select id="ind-dowShape">
+              <option value="" selected>（未選択）</option>
+              <option value="HH">HH</option>
+              <option value="HL">HL</option>
+              <option value="LL">LL</option>
+              <option value="LH">LH</option>
+            </select>
+          </label>
+
+          <label>大循環分析
+            <select id="ind-trend_5_20_40">
+              <option value="" selected>（未選択）</option>
+              <option value="Stage1">Stage1</option>
+              <option value="Stage2">Stage2</option>
+              <option value="Stage3">Stage3</option>
+              <option value="Stage4">Stage4</option>
+              <option value="Stage5">Stage5</option>
+              <option value="Stage6">Stage6</option>
+            </select>
+          </label>
+
+          <label>EMA200
+            <select id="ind-price_vs_ema200">
+              <option value="" selected>（未選択）</option>
+              <option value="above_price">価格が上</option>
+              <option value="below_price">価格が下</option>
+            </select>
+          </label>
+
+          <label>ATR指標
+            <select id="ind-atr_zone">
+              <option value="" selected>（未選択）</option>
+              <option value="pivot">pivot</option>
+              <option value="pivot_R1">pivot〜R1</option>
+              <option value="R1">R1</option>
+              <option value="R1_R2">R1〜R2</option>
+              <option value="R2">R2</option>
+              <option value="R2_HBOP">R2〜HBOP</option>
+              <option value="HBOP">HBOP</option>
+              <option value="over_HBOP">HBOP以上</option>
+              <option value="pivot_S1">pivot〜S1</option>
+              <option value="S1">S1</option>
+              <option value="S1_S2">S1〜S2</option>
+              <option value="S2">S2</option>
+              <option value="S2_LBOP">S2〜LBOP</option>
+              <option value="LBOP">LBOP</option>
+              <option value="under_LBOP">LBOP以下</option>
+            </select>
+          </label>
+
+          <label>EMA Band
+            <select id="ind-ema_band_color">
+              <option value="" selected>（未選択）</option>
+              <option value="dark_green">濃緑（強い上昇）</option>
+              <option value="light_green">薄緑（弱い上昇）</option>
+              <option value="Sprep_green">薄緑（S_prep）</option>
+              <option value="neutral">0付近</option>
+              <option value="Lprep_red">薄赤（L_prep）</option>
+              <option value="light_red">薄赤（弱い下降）</option>
+              <option value="dark_red">濃赤（強い下降）</option>
+            </select>
+          </label>
+
+          <label>CMF実数
+            <select id="ind-cmf_sign">
+              <option value="" selected>（未選択）</option>
+              <option value="CMF_positive">プラス圏</option>
+              <option value="CMF_nearZero">0付近</option>
+              <option value="CMF_negative">マイナス圏</option>
+            </select>
+          </label>
+
+          <label>CMF SMA hist
+            <select id="ind-cmf_sma">
+              <option value="" selected>（未選択）</option>
+              <option value="CMFh_up">上昇</option>
+              <option value="CMFh_gc">GoldCross</option>
+              <option value="CMFh_flat">横ばい</option>
+              <option value="CMFh_dc">DeadCross</option>
+              <option value="CMFh_down">下降</option>
+            </select>
+          </label>
+
+          <label>MACD
+            <select id="ind-MACD">
+              <option value="" selected>（未選択）</option>
+              <option value="post_gc">GoldCross後</option>
+              <option value="neutral">横ばい</option>
+              <option value="post_dc">DeadCross後</option>
+            </select>
+          </label>
+
+          <label>ROC実数
+            <select id="ind-roc_sign">
+              <option value="" selected>（未選択）</option>
+              <option value="ROC_positive">プラス圏</option>
+              <option value="ROC_nearZero">0付近</option>
+              <option value="ROC_negative">マイナス圏</option>
+            </select>
+          </label>
+
+          <label>ROC SMA hist
+            <select id="ind-roc_sma">
+              <option value="" selected>（未選択）</option>
+              <option value="ROCh_up">上昇</option>
+              <option value="ROCh_flat">横ばい</option>
+              <option value="ROCh_down">下降</option>
+            </select>
+          </label>
+
+          <label>RSI
+            <select id="ind-RSI">
+              <option value="" selected>（未選択）</option>
+              <option value="over70">70〜</option>
+              <option value="50to70">50〜70</option>
+              <option value="around50">50付近</option>
+              <option value="30to50">30〜50</option>
+              <option value="under30">0〜30</option>
+            </select>
+          </label>
+        </div>
+
+        <!-- Column 3: 判定条件 / その他 -->
+        <div class="form-column">
+          <h3>判定条件 / その他</h3>
+
+          <label>判定項目（最低勝率 %）
+            <input id="entry-minWinRate" type="number" inputmode="decimal" step="1" min="0" max="100" value="30" placeholder="例: 30">
+          </label>
+
+          <label>トレード手法
+            <select id="entry-tradeMethod">
+              <option value="" selected>（未選択）</option>
+              <option value="orderly">順張り</option>
+              <option value="contrarian">逆張り</option>
+            </select>
+          </label>
+
+          
+                    <label>決め手となったインジケーター
+            <select id="entry-decisiveIndicator">
+              <option value="" selected>（未選択）</option>
+            </select>
+          </label>
+          <label>決め手サイン <span class="muted">（自動）</span>
+            <input id="entry-decisiveSignal" type="text" placeholder="（決め手インジを選ぶと自動表示）" readonly>
+          </label>
+
+          
+          <label>相場状況メモ
+            <textarea id="entry-marketMemo" rows="6" placeholder="相場状況・気づきなど"></textarea>
+          </label>
+
+          <label>登録機種 <span class="muted">（自動）</span>
+            <input id="entry-device" type="text" placeholder="（PC/モバイルを自動判定）" readonly>
+          </label>
+
+          <label>Notion URL
+            <input id="entry-notionUrl" type="url" placeholder="https://...">
+          </label>
+
+          <label>画像（任意）
+            <input id="entry-image" type="file" accept="image/*">
+            <span class="muted small">※ 画像は保存時に縮小します。CSVには出力されません（JSONには含まれます）。</span>
+          </label>
+
+          <div id="entry-image-preview" class="image-preview" hidden>
+            <img id="entry-image-thumb" class="image-thumb" alt="エントリー画像プレビュー">
+            <div class="image-actions">
+              <a id="entry-image-open" class="image-link" href="#" target="_blank" rel="noopener">別タブで開く</a>
+              <button type="button" id="entry-image-download" class="btn-mini">ダウンロード</button>
+              <button type="button" id="entry-image-remove" class="btn-mini danger">削除</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="button-row">
+        <button type="button" id="btn-judge" class="btn-primary">判定する</button>
+        <button type="button" id="btn-save-entry" class="btn-accent">判定してエントリーを保存</button>
+        <button type="button" id="btn-clear-entry" class="btn-ghost">このエントリー入力をクリア</button>
+      </div>
+    </form>
+  </div>
+
+  <div class="judge-result-card">
+    <h3>判定結果</h3>
+    <div id="judge-output" class="judge-output">
+      <p class="muted">ここに判定結果が表示されます。</p>
+    </div>
+  </div>
+</section>
+
+
+<section id="exit-tab" class="tab-content" hidden>
+  <div class="section-header">
+    <h2>結果入力</h2>
+    <span id="exit-edit-badge" class="edit-badge" hidden>編集中</span>
+  </div>
+
+  <div class="form-card">
+    <div id="exit-error" class="error" role="alert" aria-live="polite"></div>
+
+    <form id="exit-form" novalidate>
+      <div class="exit-layout">
+        <div class="form-column exit-col-left">
+          <h3>トレード選択</h3>
+          <select id="exit-select" size="10" class="exit-select"></select>
+          <p class="muted small">※ 未決済／決済済みどちらも編集できます。</p>
+        </div>
+
+        <div class="form-column exit-col-mid">
+          <h3>決済情報</h3>
+          <div id="exit-details-main" class="exit-details-col">
+            <p class="muted">リストからトレードを選択してください。</p>
+          </div>
+        </div>
+
+        <div class="form-column exit-col-right">
+          <h3>決済詳細</h3>
+          <div id="exit-details-side" class="exit-details-col"></div>
+        </div>
+      </div>
+
+      <!-- Profit (full width, prominent) -->
+      <div id="exit-profit-wide" class="profit-wide" hidden>        <div class="profit-wide-head">
+            <div class="profit-wide-title">損益</div>
+            <div id="exitProfitDisp" class="profit-wide-value">—</div>
+          </div>
+        <p class="muted small profit-wide-note">((±(決済 - エントリー) × 倍率) - 手数料) × 枚数</p>
+        <div class="profit-wide-duration profit-wide-duration-below">
+          <span class="profit-wide-duration-label">トレード時間</span>
+          <span id="exitDurationDisp" class="profit-wide-duration-value">—</span>
+        </div>
+      </div>
+
+      <div class="button-row">
+        <button type="button" id="btn-exit-save" class="btn-accent">結果を保存</button>
+        <button type="button" id="btn-exit-clear" class="btn-ghost">この結果入力をクリア</button>
+      </div>
+    </form>
+  </div>
+</section>
+
+
+
+<section id="stats-tab" class="tab-content" hidden>
+  <h2>統計分析</h2>
+
+  <div class="form-card">
+    <div class="form-column">
+      <h3>フィルタ</h3>
+      <div class="filters">
+        <label>銘柄
+          <select id="filter-symbol">
+            <option value="">（全て）</option>
+            <option value="nk225mc">nk225mc</option>
+            <option value="nk225m">nk225m</option>
+            <option value="nk225">nk225</option>
+          </select>
+        </label>
+
+        <label>時間足
+          <select id="filter-timeframe">
+            <option value="">（全て）</option>
+            <option value="1m">1分</option>
+            <option value="5m">5分</option>
+            <option value="15m">15分</option>
+            <option value="30m">30分</option>
+            <option value="1h">1時間</option>
+            <option value="4h">4時間</option>
+            <option value="1d">日足</option>
+          </select>
+        </label>
+
+        <label>取引区分
+          <select id="filter-tradeType">
+            <option value="">（全て）</option>
+            <option value="real">リアル</option>
+            <option value="virtual">バーチャル</option>
+            <option value="practice">プラクティス</option>
+          </select>
+        </label>
+
+        <label>方向
+          <select id="filter-direction">
+            <option value="">（全て）</option>
+            <option value="long">ロング</option>
+            <option value="short">ショート</option>
+            <option value="flat">ノーポジ</option>
+          </select>
+        </label>
+
+
+        <label>エントリー曜日
+          <select id="filter-weekday">
+            <option value="">（全て）</option>
+            <option value="Monday">月曜日</option>
+            <option value="Tuesday">火曜日</option>
+            <option value="Wednesday">水曜日</option>
+            <option value="Thursday">木曜日</option>
+            <option value="Friday">金曜日</option>
+            <option value="Saturday">土曜日</option>
+            <option value="Sunday">日曜日</option>
+          </select>
+        </label>
+
+        <label>立ち合い
+          <select id="filter-session">
+            <option value="">（全て）</option>
+            <option value="Day">Day</option>
+            <option value="Night">Night</option>
+          </select>
+        </label>
+
+        <label>トレード手法
+          <select id="filter-tradeMethod">
+            <option value="">（全て）</option>
+            <option value="orderly">順張り</option>
+            <option value="contrarian">逆張り</option>
+          </select>
+        </label>
+
+        <label>フィルタリングしたいインジ
+          <select id="filter-indicatorKey">
+            <option value="">（未選択）</option>
+          </select>
+        </label>
+
+        <label>インジの状態
+          <select id="filter-indicatorState" disabled>
+            <option value="">（全て）</option>
+          </select>
+        </label>
+
+
+        <label>TP種別
+          <select id="filter-tpType">
+            <option value="">（全て）</option>
+            <option value="TP_HBOP">HBOP</option>
+            <option value="TP_R2">R2</option>
+            <option value="TP_R1">R1</option>
+            <option value="TP_pivot">pivot</option>
+            <option value="TP_S1">S1</option>
+            <option value="TP_S2">S2</option>
+            <option value="TP_LBOP">LBOP</option>
+            <option value="TP_RecentHigh">直近高値</option>
+            <option value="TP_RecentLow">直近安値</option>
+            <option value="TP_0.5ATR">0.5ATR</option>
+            <option value="TP_0.25ATR">0.25ATR</option>
+            <option value="TP_EMA200">EMA200</option>
+            <option value="TP_NoSetting">設定なし</option>
+          </select>
+        </label>
+
+        <label>LS種別
+          <select id="filter-lsType">
+            <option value="">（全て）</option>
+            <option value="LS_HBOP">HBOP</option>
+            <option value="LS_R2">R2</option>
+            <option value="LS_R1">R1</option>
+            <option value="LS_pivot">pivot</option>
+            <option value="LS_S1">S1</option>
+            <option value="LS_S2">S2</option>
+            <option value="LS_LBOP">LBOP</option>
+            <option value="LS_RecentHigh">直近高値</option>
+            <option value="LS_RecentLow">直近安値</option>
+            <option value="LS_0.5ATR">0.5ATR</option>
+            <option value="LS_0.25ATR">0.25ATR</option>
+            <option value="LS_EMA200">EMA200</option>
+            <option value="LS_NoSetting">設定なし</option>
+          </select>
+        </label>
+
+        <label>決済理由
+          <select id="filter-exitReason">
+            <option value="">（全て）</option>
+            <option value="自動決済">自動決済</option>
+            <option value="EMA Band 薄化">EMA Band 薄化</option>
+            <option value="EMA Band L_prep">EMA Band L_prep</option>
+            <option value="EMA Band S_prep">EMA Band S_prep</option>
+            <option value="EMA Band GC">EMA Band GC</option>
+            <option value="EMA Band DC">EMA Band DC</option>
+            <option value="CMF Value GC">CMF Value GC</option>
+            <option value="CMF Value DC">CMF Value DC</option>
+            <option value="CMF SMA GC">CMF SMA GC</option>
+            <option value="CMF SMA DC">CMF SMA DC</option>
+            <option value="CMF SMA Tilt Down">CMF SMA Tilt Down</option>
+            <option value="CMF SMA Tilt Up">CMF SMA Tilt Up</option>
+            <option value="RSI Value GC">RSI Value GC</option>
+            <option value="RSI Value DC">RSI Value DC</option>
+          </select>
+        </label>
+
+
+        <label>決め手インジ
+          <select id="filter-decisiveIndicator">
+            <option value="">（全て）</option>
+          </select>
+        </label>
+
+        <label>決め手サイン
+          <select id="filter-decisiveSignal">
+            <option value="">（全て）</option>
+          </select>
+        </label>
+
+        <label>決済
+          <select id="filter-result">
+            <option value="">（全て）</option>
+            <option value="open">未決済のみ</option>
+            <option value="closed">決済済みのみ</option>
+          </select>
+        </label>
+
+
+        <label>勝敗
+          <select id="filter-winloss">
+            <option value="">（全て）</option>
+            <option value="win">勝ちトレード</option>
+            <option value="loss">負けトレード</option>
+          </select>
+        </label>
+        <label>開始日
+          <input id="filter-start" type="date">
+        </label>
+
+        <label>終了日
+          <input id="filter-end" type="date">
+        </label>
+
+        <div class="button-row">
+          <button type="button" id="btn-apply-filter" class="btn-primary">適用</button>
+          <button type="button" id="btn-clear-filter" class="btn-ghost">フィルタ解除</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="form-card">
+    <div class="form-column">
+      <h3>集計</h3>
+      <div id="stats-summary" class="stats-summary"></div>
+    </div>
+  </div>
+
+  <div class="stats-charts">
+    <div class="form-card">
+      <div class="form-column">
+        <h3>累積損益</h3>
+        <div class="chart-wrap"><canvas id="chartCumulative"></canvas></div>
+      </div>
+    </div>
+
+    <div class="form-card">
+      <div class="form-column">
+        <h3>方向別（勝率・平均損益）</h3>
+        <div class="chart-wrap"><canvas id="chartDirection"></canvas></div>
+      </div>
+    </div>
+
+    <div class="form-card">
+      <div class="form-column">
+        <h3>時間足別 勝率</h3>
+        <div class="chart-wrap"><canvas id="chartTimeframe"></canvas></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="form-card">
+    <div class="button-row">
+      <button type="button" id="btnExportJson" class="btn-primary">JSONエクスポート</button>
+      <button type="button" id="btnImportJson" class="btn-ghost">JSONインポート</button>
+      <input type="file" id="import-file" accept=".json" style="display:none">
+      <button type="button" id="btnExportCsv" class="btn-accent">CSVエクスポート</button>
+    </div>
+    <p class="muted small">スマホ→PC は「JSONエクスポート → PCでJSONインポート」。CSVは数値・文字データのみを出力します。</p>
+  </div>
+
+  <div class="form-card">
+    <div class="form-column">
+      <h3>トレード一覧</h3>
+      <div class="table-wrap">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Entry日時</th>
+              <th>銘柄</th>
+              <th>時間足</th>
+                <th>方向</th>
+              <th>決め手インジ</th>
+              <th>決め手サイン</th>
+              <th>TP種別</th>
+              <th>LS種別</th>
+                <th>決済理由</th>
+              <th>損益</th>
+              <th>状態</th>
+              <th>登録機種</th>
+              <th>操作</th>
+            </tr>
+          </thead>
+          <tbody id="stats-table"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+    </main>
+    </div>
+  <footer class="app-footer">
+    <p>本アプリの判定結果・分析結果は参考情報であり、将来の損益を保証しません。投資判断は自己責任で行ってください。本アプリの利用により生じたいかなる損失についても責任を負いません。</p>
+  </footer>
+  <script src="script.js"></script>
+</body>
+</html>
