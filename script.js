@@ -1542,6 +1542,7 @@ function onJudge(shouldSave) {
       <select id="exit-reason">
         <option value="">（未選択）</option>
         <option value="自動決済" ${r.exitReason === "自動決済" ? "selected" : ""}>自動決済</option>
+        <option value="同値撤退" ${r.exitReason === "同値撤退" ? "selected" : ""}>同値撤退</option>
         <option value="EMA Band 薄化" ${r.exitReason === "EMA Band 薄化" ? "selected" : ""}>EMA Band 薄化</option>
         <option value="EMA Band L_prep" ${r.exitReason === "EMA Band L_prep" ? "selected" : ""}>EMA Band L_prep</option>
         <option value="EMA Band S_prep" ${r.exitReason === "EMA Band S_prep" ? "selected" : ""}>EMA Band S_prep</option>
